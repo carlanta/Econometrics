@@ -1,0 +1,16 @@
+# Ignorar TODO por defecto
+*
+
+# Excepcion: permitir estos directorios y ficheros
+!data/
+!data/**
+!scripts/
+!scripts/**
+!README.md
+!.gitignore
+!mEconometria.Rproj
+
+# Ignorar outputs generados
+scripts/output/
+.Rproj.user
+/.quarto/
