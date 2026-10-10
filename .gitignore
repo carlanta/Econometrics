@@ -7,10 +7,22 @@
 !scripts/
 !scripts/**
 !README.md
-!.gitignore
-!mEconometria.Rproj
+#!.gitignore
+#!mEconometria.Rproj
 
 # Ignorar outputs generados
 scripts/output/
 .Rproj.user
 /.quarto/
+
+**/*.quarto_ipynb
+
+# Web de la asignatura y herramientas (el sitio construido y materiales/ no van a git)
+!web/
+!web/**
+web/_site/
+!_tools/
+!_tools/**
+!presentaciones/
+!presentaciones/_identidad/
+!presentaciones/_identidad/**

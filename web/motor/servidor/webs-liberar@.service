@@ -1,0 +1,27 @@
+# Servicio de liberación de contenidos de una web docente: una instancia por web
+#   systemctl enable --now webs-liberar@financialeconomics
+[Unit]
+Description=Liberación de contenidos de la web %i
+After=network.target
+
+[Service]
+User=webs
+Group=webs
+Environment=WEB=%i
+ExecStart=/usr/bin/python3 /srv/webs/_app/liberar.py
+Restart=on-failure
+RuntimeDirectory=webs-liberar
+RuntimeDirectoryMode=0750
+RuntimeDirectoryPreserve=yes
+UMask=0007
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+# videos/ es donde viven los vídeos docentes propios y donde el servicio crea publicos/ con los enlaces
+# de lo liberado. El guion delante hace que systemd la ignore si no existe: las asignaturas sin vídeos
+# no tienen esa carpeta y el servicio tiene que arrancar igual.
+ReadWritePaths=/srv/webs/%i/public /srv/webs/%i/estado -/srv/webs/%i/videos
+
+[Install]
+WantedBy=multi-user.target

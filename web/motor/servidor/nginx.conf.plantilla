@@ -1,0 +1,101 @@
+# @NOMBRE@ · https://@WEB@.carlosdeanta.net (vía Nginx Proxy Manager)
+# Se instala en /etc/nginx/sites-available/<web>.conf con web/motor/publicar.sh (plantilla del motor webMotor)
+#   /                portada abierta con el botón de acceso
+#   todo lo demás    clave común de los alumnos (el profesor la cambia en /profesor/acceso.html)
+#   /profesor/       clave del profesor
+server {
+    listen 80;
+    server_name @WEB@.carlosdeanta.net;
+    root /srv/webs/@WEB@/public;
+    index index.html;
+    charset utf-8;
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+
+    # Límite de peticiones por visitante (zona definida en /etc/nginx/conf.d/webs-limites.conf)
+    limit_req zone=webs_por_ip burst=80 nodelay;
+
+    # Por defecto, todo pide la clave de los alumnos. Si el profesor abre la web desde /profesor/acceso.html,
+    # el servicio crea estado/web-abierta y la parte de los alumnos deja de pedir clave (sin recargar nginx).
+    set $clave_alumnos "@NOMBRE@";
+    if (-f /srv/webs/@WEB@/estado/web-abierta) {
+        set $clave_alumnos off;
+    }
+    auth_basic $clave_alumnos;
+    auth_basic_user_file /srv/webs/@WEB@/estado/alumnos.htpasswd;
+
+    location ~ /\. { deny all; }
+
+    # Portada y recursos de la portada: abiertos
+    location = / {
+        auth_basic off;
+        try_files /index.html =404;
+    }
+    location = /index.html { auth_basic off; }
+    location /assets/ { auth_basic off; }
+
+    # Lista de contenidos liberados: con clave y nunca en caché
+    location = /released.json {
+        add_header Cache-Control "no-store" always;
+        add_header X-Content-Type-Options nosniff always;
+    }
+
+    # Zona del profesor: usuario y clave en /etc/nginx/htpasswd/@WEB@
+    location /profesor/ {
+        auth_basic "@NOMBRE@ - profesor";
+        auth_basic_user_file /etc/nginx/htpasswd/@WEB@;
+        add_header Cache-Control "private, no-store" always;
+        add_header X-Content-Type-Options nosniff always;
+        try_files $uri $uri/ =404;
+    }
+
+    # Todo el almacén, publicado o no, para el profesor
+    location /profesor/store/ {
+        auth_basic "@NOMBRE@ - profesor";
+        auth_basic_user_file /etc/nginx/htpasswd/@WEB@;
+        alias /srv/webs/@WEB@/store/;
+    }
+
+    # Todos los vídeos, liberados o no, para el profesor. Los alumnos entran por /videos/, que solo
+    # alcanza videos/publicos/ y por tanto solo lo liberado; el profesor necesita verlos ANTES de
+    # liberarlos, para repasar lo que va a soltar. Mismo criterio que /profesor/store/ con el almacén.
+    location /profesor/videos/ {
+        auth_basic "@NOMBRE@ - profesor";
+        auth_basic_user_file /etc/nginx/htpasswd/@WEB@;
+        alias /srv/webs/@WEB@/videos/;
+        types { video/mp4 mp4; text/vtt vtt; audio/mpeg mp3; }
+        default_type application/octet-stream;
+        add_header Accept-Ranges bytes always;      # para poder adelantar y retroceder
+        add_header X-Content-Type-Options nosniff always;
+        autoindex off;
+    }
+
+    # Servicio del profesor: liberación de contenidos y clave de los alumnos (socket local)
+    location /profesor/api/ {
+        auth_basic "@NOMBRE@ - profesor";
+        auth_basic_user_file /etc/nginx/htpasswd/@WEB@;
+        client_max_body_size 2k;
+        proxy_set_header Host $host;
+        proxy_set_header X-Remote-User $remote_user;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_pass http://unix:/run/webs-liberar/@WEB@.sock:;
+    }
+
+    # Vídeos docentes propios: viven FUERA de public/, porque el publicador reemplaza public/ y store/
+    # enteros en cada publicación y mover gigas de vídeo en cada cambio del plan no tiene sentido.
+    # Se suben una vez a /srv/webs/<web>/videos/ y se quedan. Llevan la clave de los alumnos, como todo
+    # lo demás. Si una asignatura no tiene vídeos, la carpeta no existe y esto devuelve 404: inofensivo.
+    # También audio: los podcasts de repaso (mp3) van en videos/<clave>/ con la misma regla de liberación.
+    location /videos/ {
+        alias /srv/webs/@WEB@/videos/publicos/;
+        types { video/mp4 mp4; text/vtt vtt; audio/mpeg mp3; }
+        default_type application/octet-stream;
+        add_header Accept-Ranges bytes always;      # para poder adelantar y retroceder
+        add_header X-Content-Type-Options nosniff always;
+        autoindex off;
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
