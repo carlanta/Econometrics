@@ -28,3 +28,7 @@ web/_site/
 !presentaciones/_identidad/**
 __pycache__/
 *.pyc
+
+# Código de las presentaciones (los .pptx/.pdf se generan y no van a git)
+!R/
+!R/**

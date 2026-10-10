@@ -74,17 +74,24 @@ nombre_fich <- function(f) gsub("_", " ", tools::file_path_sans_ext(basename(f))
 SLIDES <- list(); CLASE <- list()
 for (i in seq_len(nrow(caps))) {
   n <- caps$nn[i]; k <- tkey(n)
-  # Presentaciones de clase (PDF) y sus PowerPoint editables para el profesor
-  sl <- sort(list.files("materiales/presentaciones/es", pattern = sprintf("^T%s_.*\\.pdf$", n), full.names = TRUE))
-  SLIDES[[n]] <- vapply(seq_along(sl), function(j) {
-    base <- sprintf("slides:%s:%d", n, j)
-    guardar(paste0(base, ":es"), sl[j], k, file.path("es", basename(sl[j])))
-    en <- file.path("materiales/presentaciones/en", basename(sl[j]))
-    if (file.exists(en)) guardar(paste0(base, ":en"), en, k, file.path("en", basename(en)))
-    pp <- file.path("materiales/presentaciones/pptx", sub("\\.pdf$", ".pptx", basename(sl[j])))
-    if (file.exists(pp)) prof(paste0("pptx:", base), pp, file.path("profesor/downloads/slides", basename(pp)))
-    base
-  }, "")
+  # Presentación CdeA del tema (R/presentaciones/capNN_pptx.R; PDF exportado con PowerPoint), ES y EN,
+  # y su PowerPoint editable para el profesor
+  base <- sprintf("slides:%s:1", n)
+  for (L in c("es", "en")) {
+    f <- list.files(file.path("presentaciones", L), pattern = sprintf("^T%s_mEC_.*\\.pdf$", n), full.names = TRUE)
+    if (length(f) == 1) {
+      guardar(paste0(base, ":", L), f, k, file.path(L, basename(f)))
+      pp <- sub("\\.pdf$", ".pptx", f)
+      if (file.exists(pp)) prof(sprintf("pptx:%s:%s", base, L), pp, file.path("profesor/downloads/slides", L, basename(pp)))
+    }
+  }
+  SLIDES[[n]] <- if (!is.null(REG[[paste0(base, ":es")]])) base else character()
+  # Presentaciones de clase del curso anterior: solo para el profesor
+  for (f in sort(list.files("materiales/presentaciones/es", pattern = sprintf("^T%s_.*\\.pdf$", n), full.names = TRUE))) {
+    prof(sprintf("clase_ant:%s:%s", n, basename(f)), f, file.path("profesor/downloads/slides/curso-anterior", basename(f)))
+    pp <- file.path("materiales/presentaciones/pptx", sub("\\.pdf$", ".pptx", basename(f)))
+    if (file.exists(pp)) prof(sprintf("clase_ant_pptx:%s:%s", n, basename(pp)), pp, file.path("profesor/downloads/slides/curso-anterior", basename(pp)))
+  }
   # Excel y datos de clase
   cl <- sort(list.files(file.path("materiales/clase/es", k), full.names = TRUE))
   CLASE[[n]] <- vapply(cl, function(f) { kk <- sprintf("clase:%s:%s", n, basename(f)); guardar(kk, f, k, file.path("clase", basename(f))); kk }, "")
@@ -235,7 +242,8 @@ materiales_profesor <- function(codes) {
   for (code in unique(codes)) {
     p <- strsplit(code, ":", fixed = TRUE)[[1]]; k <- p[1]; v <- if (length(p) > 1) p[2] else NA_character_
     out <- c(out, switch(k,
-      slides = vapply(SLIDES[[v]], function(b) { kk <- paste0("pptx:", b); if (is.null(REG[[kk]])) "" else chip(kk, sprintf("PowerPoint editable · %s", nombre_fich(reg(paste0(b, ":es"))$rel)), "teacher") }, ""),
+      slides = c(unlist(lapply(c("es", "en"), function(L) { kk <- sprintf("pptx:slides:%s:1:%s", v, L); if (is.null(REG[[kk]])) "" else chip(kk, sprintf("Presentación T%s editable (%s)", v, toupper(L)), "teacher") })),
+                 vapply(ls(REG, pattern = sprintf("^clase_ant(_pptx)?:%s:", v)), function(kk) chip(kk, sprintf("Curso anterior · %s", nombre_fich(sub("^[^:]+:[0-9]+:", "", kk))), "teacher"), "")),
       clase  = if (v == "05") chip("clase_prof:05", "Práctica de intervalos · solución", "teacher") else character(),
       act    = if (hay_sol_act(v)) { x <- ACT[[paste(v, "es", "solucion")]]; mapply(function(kk, e) chip(kk, sprintf("%s · %s", v, e), "teacher"), x$clave, x$etiqueta) } else character(),
       character()))
