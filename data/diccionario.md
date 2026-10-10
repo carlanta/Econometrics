@@ -28,4 +28,4 @@
 - **pib**: PIB (MM€, precios constantes)
 - **tipo_interes**: Tipo de interés nominal (%)
 - **inflacion**: Tasa de inflación interanual (%)
-- **crisis**: Período de crisis económica (1 = 2008Q1-2012Q4, 0 = resto)
+- **crisis**: Período de crisis económica (1 = 2015Q1-2016Q4, 0 = resto)

@@ -6,7 +6,7 @@ caso_b <- read_excel("data/caso_b_cifra_negocio.xlsx")
 cat("\n=== CASO PRÁCTICO B — Tema 9: Heterocedasticidad natural ===\n")
 pausa()
 mod <- lm(cifra_negocio ~ trabajadores + inversion, data = caso_b)
-bp <- bptest(mod)
+bp <- bptest(mod, studentize = FALSE)   # Breusch-Pagan clásico, el mismo valor que Gretl
 cat(sprintf("\n  BP: p = %.4f → %s\n", bp$p.value, ifelse(bp$p.value < 0.05, "HETEROCEDASTICIDAD", "Homocedasticidad")))
 cat("\n  Comparación estándar vs robusta:\n\n")
 s <- summary(mod)$coefficients

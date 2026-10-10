@@ -5,7 +5,9 @@
 #   A: ventas ~ precio_propio + gasto_publicidad
 #   B: cifra_negocio ~ trabajadores + inversion
 #   C: consumo ~ pib + tipo_interes
-# Breusch-Pagan con lmtest::bptest() (versión studentizada, como el manual) y errores HC1 con sandwich::vcovHC().
+# Breusch-Pagan CLÁSICO, el que Carlos enseña en Gretl (Contrastes → Heterocedasticidad → Breusch-Pagan):
+# lmtest::bptest(m, studentize = FALSE). Sin esa opción, bptest() calcula la variante de Koenker y no coincide con Gretl.
+# Errores HC1 con sandwich::vcovHC().
 # ══════════════════════════════════════════════════════════════════
 suppressPackageStartupMessages({ library(lmtest); library(sandwich) })
 for (L in c("es", "en")) {
@@ -18,9 +20,12 @@ for (L in c("es", "en")) {
   ma <- lm(ventas ~ precio_propio + gasto_publicidad, data = caso_a)
   mb <- lm(cifra_negocio ~ trabajadores + inversion, data = caso_b)
   mc <- lm(consumo ~ pib + tipo_interes, data = caso_c)
-  bp <- list(A = bptest(ma), B = bptest(mb), C = bptest(mc))
-  aux_b <- lm(residuals(mb)^2 ~ trabajadores + inversion, data = caso_b)
-  r2_aux_b <- summary(aux_b)$r.squared
+  bp <- list(A = bptest(ma, studentize = FALSE), B = bptest(mb, studentize = FALSE), C = bptest(mc, studentize = FALSE))
+  # A mano (caso B): regresión auxiliar de û²/σ̃², con σ̃² = SCR/n, y BP = SCE_aux / 2
+  g_b <- residuals(mb)^2 / (sum(residuals(mb)^2) / nrow(caso_b))
+  aux_b <- lm(g_b ~ trabajadores + inversion, data = caso_b)
+  sce_aux_b <- sum((fitted(aux_b) - mean(g_b))^2)
+  stopifnot(abs(sce_aux_b / 2 - unname(bp$B$statistic)) < 1e-6)
   std_b <- coeftest(mb); rob_b <- coeftest(mb, vcov = vcovHC(mb, type = "HC1"))
   std_c <- coeftest(mc); rob_c <- coeftest(mc, vcov = vcovHC(mc, type = "HC1"))
   decide <- function(p) if (p < 0.05) tr("Heterocedasticidad", "Heteroskedasticity") else tr("Homocedasticidad", "Homoskedasticity")
@@ -135,20 +140,20 @@ for (L in c("es", "en")) {
   x <- formula_caja(x, tr("H_0: \\text{Var}(u_i \\mid \\mathbf{X}) = \\sigma^2 \\qquad H_1: \\text{Var}(u_i \\mid \\mathbf{X}) \\neq \\sigma^2",
                           "H_0: \\text{Var}(u_i \\mid \\mathbf{X}) = \\sigma^2 \\qquad H_1: \\text{Var}(u_i \\mid \\mathbf{X}) \\neq \\sigma^2"),
                     0.6, 2.0, 12.1, 0.9, size = 24)
-  x <- formula_caja(x, "\\hat{u}_i^2 = \\delta_0 + \\delta_1 X_{1i} + \\dots + \\delta_k X_{ki} + v_i", 0.6, 3.15, 6.6, 0.9, size = 22)
-  x <- formula_caja(x, "BP = n \\cdot R^2_{\\text{aux}} \\sim \\chi^2_k", 7.5, 3.15, 5.2, 0.9, size = 22)
+  x <- formula_caja(x, "\\frac{\\hat{u}_i^2}{\\tilde{\\sigma}^2} = \\delta_0 + \\delta_1 X_{1i} + \\dots + \\delta_k X_{ki} + v_i", 0.6, 3.1, 6.6, 1.05, size = 22)
+  x <- formula_caja(x, tr("BP = \\frac{\\text{SCE}_{\\text{aux}}}{2} \\sim \\chi^2_k", "BP = \\frac{\\text{ESS}_{\\text{aux}}}{2} \\sim \\chi^2_k"), 7.5, 3.1, 5.2, 1.05, size = 22)
   x <- vinetas(x, tr(
     c(paste0("1. Se estima el modelo por MCO y se guardan los residuos ", M("\\hat{u}_i"), "."),
-      paste0("2. Regresión auxiliar de ", M("\\hat{u}_i^2"), " sobre las explicativas."),
+      paste0("2. Regresión auxiliar de ", M("\\hat{u}_i^2/\\tilde{\\sigma}^2"), ", con ", M("\\tilde{\\sigma}^2 = \\text{SCR}/n"), ", sobre las explicativas."),
       paste0("3. Si el p-valor es menor que ", M("\\alpha"), ", se rechaza la homocedasticidad.")),
     c(paste0("1. Estimate the model by OLS and keep the residuals ", M("\\hat{u}_i"), "."),
-      paste0("2. Auxiliary regression of ", M("\\hat{u}_i^2"), " on the regressors."),
+      paste0("2. Auxiliary regression of ", M("\\hat{u}_i^2/\\tilde{\\sigma}^2"), ", with ", M("\\tilde{\\sigma}^2 = \\text{RSS}/n"), ", on the regressors."),
       paste0("3. If the p-value is below ", M("\\alpha"), ", homoskedasticity is rejected."))),
     0.6, 4.35, 7.4, 2.4, size = 17)
   x <- caja_dato(x, 8.4, 4.3, 4.3, 2.45, tr("Caso B, a mano", "Case B, by hand"),
-    M(paste0("BP = ", nrow(caso_b), " \\times ", numtex(r2_aux_b, 4), " = ", numtex(nrow(caso_b) * r2_aux_b, 2))),
-    tr(sprintf("Tamaño muestral por el %s de la regresión auxiliar, con 2 g. l.: p-valor = %s.", M("R^2"), num(bp$B$p.value, 3)),
-       sprintf("Sample size times the %s of the auxiliary regression, with 2 d.f.: p-value = %s.", M("R^2"), num(bp$B$p.value, 3))),
+    M(paste0("BP = ", numtex(sce_aux_b, 3), "/2 = ", numtex(sce_aux_b / 2, 2))),
+    tr(sprintf("La mitad de la suma de cuadrados explicada de la regresión auxiliar, con 2 g. l.: p-valor = %s. Es lo que da Gretl.", num(bp$B$p.value, 4)),
+       sprintf("Half the explained sum of squares of the auxiliary regression, with 2 d.f.: p-value = %s. It is what Gretl reports.", num(bp$B$p.value, 4))),
     ID$navy, size_valor = 22)
 
   # 10 · 9.3 Resultados de los tres casos
@@ -164,10 +169,10 @@ for (L in c("es", "en")) {
                                             c("Case", "BP statistic", "d.f.", "p-value", "Decision (5 %)")), size = 16, texto = c(1, 5)), 0.6, 2.1)
   x <- vinetas(x, tr(
     c(sprintf("A: p-valor = %s. No se rechaza: los errores estándar de siempre valen.", num(bp$A$p.value, 3)),
-      sprintf("B: p-valor = %s, justo por debajo del 5 %%: heterocedasticidad natural por tamaño.", num(bp$B$p.value, 3)),
+      sprintf("B: p-valor = %s, se rechaza incluso al 1 %%: heterocedasticidad natural por tamaño.", num(bp$B$p.value, 3)),
       sprintf("C: p-valor = %s. En series, la varianza también puede cambiar con el tiempo.", num(bp$C$p.value, 4))),
     c(sprintf("A: p-value = %s. Not rejected: the usual standard errors are fine.", num(bp$A$p.value, 3)),
-      sprintf("B: p-value = %s, just below 5 %%: natural heteroskedasticity due to size.", num(bp$B$p.value, 3)),
+      sprintf("B: p-value = %s, rejected even at 1 %%: natural heteroskedasticity due to size.", num(bp$B$p.value, 3)),
       sprintf("C: p-value = %s. In time series the variance may also change over time.", num(bp$C$p.value, 4)))),
     0.6, 4.4, 12.1, 2.4, size = 17)
 
@@ -250,17 +255,17 @@ for (L in c("es", "en")) {
   sw <- data.frame(
     op = tr(c("Gráfico de residuos", "Contraste de Breusch-Pagan", "Contraste de White", "MCO con errores robustos"),
             c("Residual plot", "Breusch-Pagan test", "White test", "OLS with robust errors")),
-    gretl = tr(c("Modelo: Gráficos → Gráfico de residuos", "Modelo: Contrastes → Heterocedasticidad → Koenker",
+    gretl = tr(c("Modelo: Gráficos → Gráfico de residuos", "Modelo: Contrastes → Heterocedasticidad → Breusch-Pagan",
                  "Modelo: Contrastes → Heterocedasticidad → White", "Modelo → MCO → Desviaciones típicas robustas"),
-               c("Model: Graphs → Residual plot", "Model: Tests → Heteroskedasticity → Koenker",
+               c("Model: Graphs → Residual plot", "Model: Tests → Heteroskedasticity → Breusch-Pagan",
                  "Model: Tests → Heteroskedasticity → White", "Model → OLS → Robust standard errors")),
-    r = c("plot(fitted(m), resid(m)^2)", "lmtest::bptest(m)", "bptest(m, ~ x1 * x2 + I(x1^2) + I(x2^2))",
+    r = c("plot(fitted(m), resid(m)^2)", "bptest(m, studentize = FALSE)", "bptest(m, ~ x1 * x2 + I(x1^2) + I(x2^2))",
           "coeftest(m, vcov = vcovHC(m, type = \"HC1\"))"))
   x <- poner_tabla(x, tabla_pptx(sw, tr(c("Operación", "Gretl", "R"), c("Task", "Gretl", "R")), size = 13, mono = 3, texto = 1:2), 0.6, 2.1)
   x <- vinetas(x, tr(
-    c("bptest() calcula por defecto la versión studentizada (Koenker): en Gretl es la opción «Koenker».",
+    c("En R, studentize = FALSE da el mismo valor que Gretl. Sin esa opción, bptest() calcula la variante de Koenker, que da otro número.",
       "Excel de clase: regresión auxiliar y estadístico BP paso a paso."),
-    c("bptest() computes the studentised (Koenker) version by default: in Gretl it is the «Koenker» option.",
+    c("In R, studentize = FALSE gives the same value as Gretl. Without it, bptest() computes Koenker's variant, which gives a different number.",
       "Class Excel file: auxiliary regression and the BP statistic step by step.")),
     0.6, 4.8, 12.1, 1.7, size = 16)
 

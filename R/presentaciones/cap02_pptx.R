@@ -84,13 +84,15 @@ for (L in c("es", "en")) {
 
   # 2 · Índice
   x <- diapo_indice_n(x, data.frame(
-    num = sprintf("2.%d", 1:9),
+    num = sprintf("2.%d", 1:10),
     titulo = tr(c("El modelo de regresión lineal general", "Supuestos básicos del MRLG", "Estimación por mínimos cuadrados ordinarios",
                   "Estimación con R: la función lm()", "Interpretación de los coeficientes", "Efectos del cambio de unidades",
+                  "Formas funcionales: la no linealidad",
                   paste0("Bondad de ajuste: el coeficiente de determinación ", M("R^2")), "Varianza del término de error",
                   "Aplicación a los casos prácticos"),
                 c("The general linear regression model", "Basic assumptions of the GLRM", "Ordinary least squares estimation",
                   "Estimation with R: the lm() function", "Interpreting the coefficients", "Effects of changing units",
+                  "Functional forms: non-linearity",
                   paste0("Goodness of fit: the coefficient of determination ", M("R^2")), "Variance of the error term",
                   "Application to the case studies"))), tema)
 
@@ -290,7 +292,7 @@ for (L in c("es", "en")) {
                   oscura = TRUE, size = 15)
 
   # 16 · Formas funcionales con logaritmos
-  x <- diapo_contenido(x, tr("2.5 · Formas funcionales con logaritmos", "2.5 · Functional forms with logarithms"),
+  x <- diapo_contenido(x, tr("2.7 · Formas funcionales con logaritmos", "2.7 · Functional forms with logarithms"),
     tr("Logaritmos: de unidades a porcentajes", "Logarithms: from units to percentages"), tema)
   x <- tabla_eq(x, tr(c("Modelo", "Especificación", paste0("Si ", M("X"), " sube…, ", M("Y"), " cambia…")), c("Model", "Specification", paste0("If ", M("X"), " rises…, ", M("Y"), " changes…"))),
     list(
@@ -308,7 +310,7 @@ for (L in c("es", "en")) {
                               15, ID$navy, bold = TRUE), 8.35, 5.12, 4.4, 1.6)
 
   # 17 · 2.7 Descomposición de la variabilidad
-  x <- diapo_contenido(x, tr("2.7 · Bondad de ajuste", "2.7 · Goodness of fit"),
+  x <- diapo_contenido(x, tr("2.8 · Bondad de ajuste", "2.8 · Goodness of fit"),
     tr(paste0("Cuánta variación de ", M("Y"), " explica el modelo"), paste0("How much variation in ", M("Y"), " the model explains")), tema)
   x <- formula_caja(x, paste0(SCT, " = ", SCE, " + ", SCR, ": \\qquad \\sum_{i=1}^{n} (Y_i - \\overline{Y})^2 = \\sum_{i=1}^{n} (\\hat{Y}_i - \\overline{Y})^2 + \\sum_{i=1}^{n} \\hat{u}_i^2"),
                     0.6, 1.95, 12.1, 1.4, size = 22)
@@ -333,7 +335,7 @@ for (L in c("es", "en")) {
   x <- imagen_ggplot(x, g_aj, 6.8, 3.55, 5.9, 3.3)
 
   # 18 · 2.7–2.8 R², R² corregido y varianza del error
-  x <- diapo_contenido(x, tr("2.7 · Bondad de ajuste · 2.8 · Varianza del error", "2.7 · Goodness of fit · 2.8 · Error variance"),
+  x <- diapo_contenido(x, tr("2.8 · Bondad de ajuste · 2.9 · Varianza del error", "2.8 · Goodness of fit · 2.9 · Error variance"),
     tr("Tres medidas del ajuste del modelo", "Three measures of the model's fit"), tema)
   x <- formula_caja(x, paste0("R^2 = \\frac{", SCE, "}{", SCT, "} = 1 - \\frac{", SCR, "}{", SCT, "}"), 0.6, 1.95, 3.85, 1.25, size = 20)
   x <- formula_caja(x, paste0("\\overline{R}{}^2 = 1 - \\frac{", SCR, "/(n-k-1)}{", SCT, "/(n-1)}"), 4.75, 1.95, 3.85, 1.25, size = 20)
@@ -352,7 +354,7 @@ for (L in c("es", "en")) {
                               16, ID$navy, bold = TRUE), 0.6, 5.95, 12.1, 0.8)
 
   # 19 · 2.9 Casos prácticos
-  x <- diapo_contenido(x, tr("2.9 · Aplicación a los casos prácticos", "2.9 · Application to the case studies"),
+  x <- diapo_contenido(x, tr("2.10 · Aplicación a los casos prácticos", "2.10 · Application to the case studies"),
     tr("Los tres casos estimados por MCO", "The three cases estimated by OLS"), tema)
   pb <- summary(mb)$coefficients
   casos <- tr(list(

@@ -61,13 +61,13 @@ for (L in c("es", "en")) {
 
   # 2 · Índice
   x <- diapo_indice(x, data.frame(
-    num = c(sprintf("4.%d", 1:6), "+"),
+    num = c(sprintf("4.%d", 1:5), "4.6–4.8", "4.9"),
     titulo = tr(c("Conceptos básicos", "Los tres pasos del contraste", paste0("El contraste ", M("t"), " para un coeficiente individual"),
-                  "La regla del p-valor", "Significatividad individual: ¿es relevante la variable?", "Aplicación a los casos prácticos",
-                  paste0("Ampliación: restricciones lineales y contraste ", M("F"))),
+                  "La regla del p-valor", "Significatividad individual: ¿es relevante la variable?",
+                  paste0("Restricciones lineales, contraste ", M("F"), " y significatividad global"), "Aplicación a los casos prácticos"),
                 c("Basic concepts", "The three steps of a test", paste0("The ", M("t"), " test for a single coefficient"),
-                  "The p-value rule", "Individual significance: does the variable matter?", "Application to the case studies",
-                  paste0("Extension: linear restrictions and the ", M("F"), " test")))), tema)
+                  "The p-value rule", "Individual significance: does the variable matter?",
+                  paste0("Linear restrictions, the ", M("F"), " test and overall significance"), "Application to the case studies"))), tema)
 
   # 3 · Objetivos
   x <- diapo_objetivos(x, list(
@@ -242,7 +242,7 @@ for (L in c("es", "en")) {
        c(paste0("One restriction: ", M("\\mathbf{R}\\boldsymbol{\\beta} = r")), "Several restrictions: F", "Overall significance")))
 
   # 14 · Una restricción lineal
-  x <- diapo_contenido(x, tr("Ampliación · Una restricción lineal", "Extension · One linear restriction"),
+  x <- diapo_contenido(x, tr("4.6 · Una restricción lineal", "4.6 · One linear restriction"),
     tr("Contrastar una combinación de coeficientes", "Testing a combination of coefficients"), tema)
   x <- formula_caja(x, "H_0: \\beta_1 + \\beta_3 = 0 \\;\\Leftrightarrow\\; \\mathbf{R}\\boldsymbol{\\beta} = r, \\quad \\mathbf{R} = \\begin{pmatrix} 0 & 1 & 0 & 1 \\end{pmatrix}, \\; r = 0",
                     0.6, 1.95, 12.1, 0.95, size = 22)
@@ -259,7 +259,7 @@ for (L in c("es", "en")) {
     0.6, 4.95, 12.1, 1.9, size = 16)
 
   # 15 · Varias restricciones: contraste F
-  x <- diapo_contenido(x, tr("Ampliación · Varias restricciones lineales", "Extension · Several linear restrictions"),
+  x <- diapo_contenido(x, tr("4.7 · Varias restricciones lineales", "4.7 · Several linear restrictions"),
     tr(paste0("Varias restricciones a la vez: el contraste ", M("F")), paste0("Several restrictions at once: the ", M("F"), " test")), tema)
   x <- formula_caja(x, paste0("F = \\frac{(", SCR_R, " - ", SCR_NR, ")/q}{", SCR_NR, "/(n-k-1)} \\sim F_{q,\\,n-k-1}"), 0.6, 1.95, 6.0, 1.4, size = 24)
   x <- formula_caja(x, "F = \\frac{(\\mathbf{R}\\hat{\\boldsymbol{\\beta}} - \\mathbf{r})'\\,[\\mathbf{R}\\,\\widehat{\\text{Var}}(\\hat{\\boldsymbol{\\beta}})\\,\\mathbf{R}']^{-1}(\\mathbf{R}\\hat{\\boldsymbol{\\beta}} - \\mathbf{r})}{q}",
@@ -277,7 +277,7 @@ for (L in c("es", "en")) {
                  ID$navy, size_valor = 20)
 
   # 16 · Significación global
-  x <- diapo_contenido(x, tr("Ampliación · Significación global", "Extension · Overall significance"),
+  x <- diapo_contenido(x, tr("4.8 · Significación global", "4.8 · Overall significance"),
     tr("¿Explica algo el modelo en su conjunto?", "Does the model explain anything at all?"), tema)
   x <- formula_caja(x, "H_0: \\beta_1 = \\beta_2 = \\cdots = \\beta_k = 0", 0.6, 1.95, 5.6, 1.15, size = 22)
   x <- formula_caja(x, "F = \\frac{R^2 / k}{(1 - R^2)/(n-k-1)} \\sim F_{k,\\,n-k-1}", 6.5, 1.95, 6.23, 1.15, size = 22)
@@ -313,7 +313,7 @@ for (L in c("es", "en")) {
                               16, ID$navy, bold = TRUE), 0.6, 5.85, 12.1, 0.9)
 
   # 18 · 4.6 Casos prácticos
-  x <- diapo_contenido(x, tr("4.6 · Aplicación a los casos prácticos", "4.6 · Application to the case studies"),
+  x <- diapo_contenido(x, tr("4.9 · Aplicación a los casos prácticos", "4.9 · Application to the case studies"),
     tr("Qué variables cuentan en cada caso", "Which variables matter in each case"), tema)
   casos <- tr(list(
       c("A · Demanda", paste0("Precio, publicidad y precio del sustitutivo: las tres significativas al 5 %, con ", M("t"), " de ",

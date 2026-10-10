@@ -14,7 +14,7 @@ plot(caso_b$trabajadores, residuals(mod)^2, pch=16, col="gray30", xlab="Trabajad
 par(mfrow = c(1,1))
 pausa()
 cat("\n--- 2. CONTRASTE BREUSCH-PAGAN ---\n\n")
-bp <- bptest(mod)
+bp <- bptest(mod, studentize = FALSE)   # Breusch-Pagan clásico, el mismo valor que Gretl
 cat(sprintf("  Estadístico BP = %.3f, p-valor = %.4f\n", bp$statistic, bp$p.value))
 cat(sprintf("  Decisión: %s\n", ifelse(bp$p.value < 0.05, "HETEROCEDASTICIDAD", "Homocedasticidad")))
 pausa()

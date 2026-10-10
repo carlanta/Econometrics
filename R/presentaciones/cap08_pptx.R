@@ -58,11 +58,13 @@ for (L in c("es", "en")) {
 
   # 2 · Índice
   x <- diapo_indice(x, data.frame(
-    num = c("8.1", "8.2", "8.3", "8.3.1", "8.3.2", "8.3.3"),
-    titulo = tr(c("Concepto de variable ficticia (dummy)", "Efecto sobre el término independiente", "Aplicación a los casos prácticos",
+    num = c("8.1", "8.2", "8.3", "8.4", "8.4.1", "8.4.2", "8.4.3"),
+    titulo = tr(c("Concepto de variable ficticia (dummy)", "Efecto sobre el término independiente",
+                  "Interacciones con variables binarias", "Aplicación a los casos prácticos",
                   "Caso A: efecto de la promoción sobre las ventas", "Caso B: efecto de la PAC y de la región",
                   "Caso C: efecto de la crisis sobre el consumo"),
-                c("The dummy variable concept", "Effect on the intercept", "Application to the case studies",
+                c("The dummy variable concept", "Effect on the intercept",
+                  "Interactions with binary variables", "Application to the case studies",
                   "Case A: effect of the promotion on sales", "Case B: effect of the CAP subsidy and the region",
                   "Case C: effect of the crisis on consumption"))), tema)
 
@@ -179,7 +181,7 @@ for (L in c("es", "en")) {
     size = 15)
 
   # 10 · 8.2 Interacciones
-  x <- diapo_contenido(x, tr("8.2 · Interacciones", "8.2 · Interactions"),
+  x <- diapo_contenido(x, tr("8.3 · Interacciones", "8.3 · Interactions"),
     tr("Cuando la ficticia también cambia la pendiente", "When the dummy also changes the slope"), tema)
   x <- formula_caja(x, "Y_i = \\beta_0 + \\beta_1 X_i + \\beta_2 D_i + \\beta_3 (D_i \\cdot X_i) + u_i", 0.6, 2.0, 7.4, 0.9, size = 24)
   x <- vinetas(x, tr(
@@ -252,7 +254,7 @@ for (L in c("es", "en")) {
        c("A: the promotion", "B: the CAP subsidy and the region", "C: the crisis")))
 
   # 14 · 8.3.1 Caso A
-  x <- diapo_contenido(x, tr("8.3.1 · Caso A: la promoción", "8.3.1 · Case A: the promotion"),
+  x <- diapo_contenido(x, tr("8.4.1 · Caso A: la promoción", "8.4.1 · Case A: the promotion"),
     tr("La promoción suma ventas a igual precio", "The promotion adds sales at the same price"), tema)
   x <- poner_tabla(x, tabla_pptx(tab_coef(ma, tr(c("Constante", "Precio propio", "Publicidad", "Promoción (ficticia)"),
                                                 c("Constant", "Own price", "Advertising", "Promotion (dummy)"))), cab_coef, size = 15), 0.6, 2.05, 7.4)
@@ -272,7 +274,7 @@ for (L in c("es", "en")) {
     oscura = TRUE, size = 15)
 
   # 15 · 8.3.2 Caso B
-  x <- diapo_contenido(x, tr("8.3.2 · Caso B: la PAC y la región", "8.3.2 · Case B: the CAP subsidy and the region"),
+  x <- diapo_contenido(x, tr("8.4.2 · Caso B: la PAC y la región", "8.4.2 · Case B: the CAP subsidy and the region"),
     tr("Dos ficticias que no marcan diferencias", "Two dummies that make no difference"), tema)
   x <- poner_tabla(x, tabla_pptx(tab_coef(mb, tr(c("Constante", "Trabajadores", "Inversión", "PAC (ficticia)", "Región norte (ficticia)"),
                                                 c("Constant", "Workers", "Investment", "CAP (dummy)", "Northern region (dummy)"))), cab_coef, size = 15), 0.6, 2.05, 7.4)
@@ -290,7 +292,7 @@ for (L in c("es", "en")) {
     oscura = TRUE, size = 15)
 
   # 16 · 8.3.3 Caso C
-  x <- diapo_contenido(x, tr("8.3.3 · Caso C: la crisis", "8.3.3 · Case C: the crisis"),
+  x <- diapo_contenido(x, tr("8.4.3 · Caso C: la crisis", "8.4.3 · Case C: the crisis"),
     tr("En crisis, el consumo autónomo cae", "In a crisis, autonomous consumption falls"), tema)
   anios <- substr(caso_c$trimestre, 1, 4)
   df_c <- data.frame(t = seq_len(nrow(caso_c)), r = residuals(mc0),
@@ -340,7 +342,7 @@ for (L in c("es", "en")) {
     0.6, 5.35, 12.1, 1.5, size = 16)
 
   # 18 · Vuelta a los casos
-  x <- diapo_contenido(x, tr("8.3 · Vuelta a los casos", "8.3 · Back to the cases"),
+  x <- diapo_contenido(x, tr("8.4 · Vuelta a los casos", "8.4 · Back to the cases"),
     tr("Tres ficticias, tres respuestas", "Three dummies, three answers"), tema)
   x <- caja_dato(x, 0.6, 2.05, 3.85, 2.75, tr("A · Promoción", "A · Promotion"), paste0("+", mill(sa["promocion", 1])),
     tr(sprintf("Más ventas con igual precio y publicidad. Significativa (p-valor = %s).", num(sa["promocion", 4], 3)),

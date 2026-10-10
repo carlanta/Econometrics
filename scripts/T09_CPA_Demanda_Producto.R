@@ -6,7 +6,7 @@ caso_a <- read_excel("data/caso_a_demanda.xlsx")
 cat("\n=== CASO PRÁCTICO A — Tema 9: Heterocedasticidad (contraejemplo) ===\n")
 pausa()
 mod <- lm(ventas ~ precio_propio + gasto_publicidad, data = caso_a)
-bp <- bptest(mod)
+bp <- bptest(mod, studentize = FALSE)   # Breusch-Pagan clásico, el mismo valor que Gretl
 cat(sprintf("\n  BP: estadístico = %.3f, p = %.4f\n", bp$statistic, bp$p.value))
 cat(sprintf("  Decisión: %s\n", ifelse(bp$p.value < 0.05, "Heterocedasticidad", "NO hay heterocedasticidad")))
 cat("\n  En este caso, los errores estándar convencionales son VÁLIDOS.\n")

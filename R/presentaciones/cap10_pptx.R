@@ -37,11 +37,11 @@ for (L in c("es", "en")) {
 
   # 2 · Índice
   x <- diapo_indice(x, data.frame(
-    num = c("10.1", "10.2", "10.3", "10.3.1", "10.4"),
+    num = c("10.1", "10.2", "10.3", "10.3.1", "10.4", "10.5"),
     titulo = tr(c("Concepto de autocorrelación", "Consecuencias de la autocorrelación", "Contraste de Durbin-Watson",
-                  "Aplicación al caso C", "Aplicación a los casos prácticos e inferencia robusta"),
+                  "Aplicación al caso C", "Inferencia robusta a la autocorrelación: errores HAC", "Aplicación a los casos prácticos"),
                 c("The autocorrelation concept", "Consequences of autocorrelation", "The Durbin-Watson test",
-                  "Application to case C", "Application to the case studies and robust inference"))), tema)
+                  "Application to case C", "Inference robust to autocorrelation: HAC errors", "Application to the case studies"))), tema)
 
   # 3 · Objetivos
   x <- diapo_objetivos(x, list(
@@ -226,7 +226,7 @@ for (L in c("es", "en")) {
     oscura = TRUE, size = 15)
 
   # 13 · 10.4.2 Caso C: comparación
-  x <- diapo_contenido(x, tr("10.4.2 · Caso C: tres errores estándar", "10.4.2 · Case C: three standard errors"),
+  x <- diapo_contenido(x, tr("10.4 · Caso C: tres errores estándar", "10.4 · Case C: three standard errors"),
     tr("Convencional, HC1 y HAC en la función de consumo", "Conventional, HC1 and HAC in the consumption function"), tema)
   fila <- function(j, d) c(num(ct_std[j, 2], d), num(ct_hc[j, 2], d), num(ct_hac[j, 2], d))
   tab <- data.frame(
@@ -273,7 +273,7 @@ for (L in c("es", "en")) {
     0.6, 4.3, 12.1, 1.8, size = 16)
 
   # 15 · Vuelta a los casos
-  x <- diapo_contenido(x, tr("10.4 · Vuelta a los casos", "10.4 · Back to the cases"),
+  x <- diapo_contenido(x, tr("10.5 · Vuelta a los casos", "10.5 · Back to the cases"),
     tr("Solo el caso C tiene memoria", "Only case C has memory"), tema)
   x <- caja_dato(x, 0.6, 2.05, 3.85, 2.75, tr("A · Demanda", "A · Demand"), tr("No aplica", "Not applicable"),
     tr("Corte transversal: no hay orden temporal.", "Cross-section: there is no time order."), ID$gris_med, size_valor = 26)
