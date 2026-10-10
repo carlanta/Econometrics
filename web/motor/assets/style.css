@@ -190,3 +190,6 @@ section.grupo{display:grid;gap:.75rem;margin-top:1rem}
 body.teacher table.agenda td.blk{width:9rem}
 body.teacher table.agenda td.nota{width:24%}
 body.teacher table.agenda{min-width:820px}
+/* Scripts de R que el profesor suelta en clase: sus botones y, al lado, «Liberar / Ocultar» (liberable_en_clase) */
+.en-clase{display:inline-flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+button.toggle.mini{min-width:0;padding:.4rem .7rem;font-size:.8rem}

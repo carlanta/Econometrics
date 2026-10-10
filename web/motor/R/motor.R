@@ -182,6 +182,18 @@ chip <- function(clave, etiqueta, zona = "public", meta = "") {
   r <- reg(clave)
   sprintf('<a class="dl" href="%s"><span class="dl-l">%s</span><span class="dl-m">%s%s · %s</span></a>', h(href(r, zona)), h(etiqueta), meta, r$ext, tam(r$bytes))
 }
+# App de la asignatura (servida por su VM de apps; web/curso.conf APPS y web/apps.conf). No es un fichero: el
+# alumno la abre en ventana nueva en /apps/<clave>/ (solo si la clave está liberada, lo controla nginx) y el
+# profesor en /profesor/apps/<clave>/. Va dentro de liberable() como cualquier otro material.
+APPS_CURSO <- local({
+  l <- grep("^APPS=", readLines("web/curso.conf", warn = FALSE), value = TRUE)
+  if (length(l)) sub("^APPS=[\"']?([^\"' #]*).*$", "\\1", l[1]) else ""
+})
+boton_app <- function(clave, etiqueta, zona = "public", meta = "") {
+  if (!nzchar(APPS_CURSO)) stop("boton_app(): la asignatura no tiene APPS (ip:puerto de su VM de apps) en web/curso.conf")
+  sprintf('<a class="dl app" href="%s"><span class="dl-l">%s</span><span class="dl-m">%s</span></a>',
+          if (zona == "public") sprintf("/apps/%s/", clave) else sprintf("/profesor/apps/%s/", clave), h(etiqueta), meta)
+}
 # Idiomas adicionales para los alumnos de otros países (CURSO$idiomas_extra, p. ej. c("fr", "it", "pt")):
 # si existe el material en ese idioma, sale un botón más junto al de ES/EN; si no, no se nota.
 NOMBRE_IDIOMA <- c(es = "Versión en español", en = "English version", fr = "Version française",
@@ -193,6 +205,15 @@ par_idiomas <- function(base, etiqueta, zona = "public", meta = "", L = "en") {
   otro <- setdiff(IDIOMAS, L)
   extra <- paste(vapply(op("idiomas_extra", character()), function(l) boton_idioma(paste0(base, ":", l), l, zona), ""), collapse = "")
   sprintf('<span class="pair">%s%s%s</span>', chip(paste0(base, ":", L), etiqueta, zona, meta), boton_idioma(paste0(base, ":", otro), otro, zona), extra)
+}
+# Material con clave propia que el profesor suelta en clase y vuelve a retirar (los scripts de R, decisión del autor,
+# 10/10/2026). Para los alumnos es un liberable más. En la zona del profesor sus botones se pintan de verde o rojo
+# según el estado real (data-estado) y llevan al lado «Liberar / Ocultar» (data-liberar), que profesor.js atiende
+# sin salir del plan de la sesión. `nombre` sale en la confirmación.
+liberable_en_clase <- function(clave, contenido, nombre, zona = "public") {
+  if (zona == "public") return(liberable(clave, contenido, "", zona, en_linea = TRUE))
+  sprintf('<span class="en-clase">%s<button type="button" class="toggle mini" data-liberar="%s" data-nombre="%s" hidden>…</button></span>',
+          gsub('<a class="dl"', sprintf('<a class="dl" data-estado="%s"', h(clave)), contenido, fixed = TRUE), h(clave), h(nombre))
 }
 liberable <- function(keys, contenido, pendiente, zona = "public", en_linea = FALSE) {
   if (zona != "public") return(contenido)
@@ -281,11 +302,12 @@ pagina <- function(ruta, titulo, cuerpo, zona = "public", actual = "") {
     # Con Ctrl, Mayús o botón central se respeta lo que pida el usuario. El menú sigue en la misma ventana.
     # Ojo: dentro del selector, comillas simples (\' en R). Unas comillas dobles cerraban la cadena de JavaScript y el
     # navegador descartaba el script entero sin avisar (2026-09-21).
-    '<script>(function(){var sel="main a.dl, main a.alt, main a[href$=\'.pdf\'], main a[href^=\'http\'], main a[href*=\'/downloads/\'], main a[href*=\'/recursos/\'], main a[href*=\'/profesor/store/\']";',
+    # Las apps (a.app) son páginas de la propia web que acaban en «/», pero se abren siempre en ventana nueva.
+    '<script>(function(){var sel="main a.dl, main a.alt, main a.app, main a[href$=\'.pdf\'], main a[href^=\'http\'], main a[href*=\'/downloads/\'], main a[href*=\'/recursos/\'], main a[href*=\'/profesor/store/\']";',
     'document.addEventListener("click",function(e){var a=e.target.closest(sel);if(!a||a.hidden||!a.href||a.getAttribute("href")==="#"||e.defaultPrevented)return;',
-    'if(a.origin===location.origin&&(/[.]html$/.test(a.pathname)||/[/]$/.test(a.pathname)))return;',   # páginas de la propia web: misma ventana
+    'if(!a.classList.contains("app")&&a.origin===location.origin&&(/[.]html$/.test(a.pathname)||/[/]$/.test(a.pathname)))return;',   # páginas de la propia web: misma ventana
     'if(e.button!==0||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;e.preventDefault();',
-    'var w=Math.min(1200,screen.availWidth-60),h=Math.max(500,screen.availHeight-80);',
+    'var w=Math.min(a.classList.contains("app")?1440:1200,screen.availWidth-60),h=Math.max(500,screen.availHeight-80);',
     'var v=window.open(a.href,"_blank","popup=yes,width="+w+",height="+h+",left=30,top=20");if(v){v.opener=null;}else{location.href=a.href;}});})();</script>',
     '</body></html>')
   escribir(ruta, html)

@@ -72,6 +72,7 @@ nombre_fich <- function(f) gsub("_", " ", tools::file_path_sans_ext(basename(f))
 
 # ── Resto de materiales por capítulo ───────────────────────────────
 SLIDES <- list(); CLASE <- list()
+SCRIPTS <- data.frame()   # un script por fila: tema, parte (ECON, CPA…), clave de liberación y nombre
 for (i in seq_len(nrow(caps))) {
   n <- caps$nn[i]; k <- tkey(n)
   # Presentación CdeA del tema (R/presentaciones/capNN_pptx.R; PDF exportado con PowerPoint), ES y EN,
@@ -95,19 +96,31 @@ for (i in seq_len(nrow(caps))) {
   # Excel y datos de clase
   cl <- sort(list.files(file.path("materiales/clase/es", k), full.names = TRUE))
   CLASE[[n]] <- vapply(cl, function(f) { kk <- sprintf("clase:%s:%s", n, basename(f)); guardar(kk, f, k, file.path("clase", basename(f))); kk }, "")
-  # Scripts de R del tema: un zip listo para abrir en RStudio (proyecto, datos y scripts)
-  sc <- sort(list.files("scripts", pattern = sprintf("^T%s_.*\\.R$", n), full.names = TRUE))
-  dir_z <- file.path(tempfile("scripts_"), sprintf("Econometria_T%s", n))
-  dir.create(file.path(dir_z, "scripts"), recursive = TRUE); dir.create(file.path(dir_z, "data"))
-  file.copy("mEconometria.Rproj", dir_z); file.copy(sc, file.path(dir_z, "scripts"))
-  file.copy(list.files("data", pattern = "\\.(csv|xlsx)$", full.names = TRUE), file.path(dir_z, "data"))
-  z <- file.path(STORE, k, sprintf("Scripts_T%s.zip", n)); dir.create(dirname(z), recursive = TRUE, showWarnings = FALSE)
-  zip::zipr(z, files = dir_z)
-  guardar(sprintf("script:%s", n), z, k)
-  # App Shiny del tema (genera sus propios datos)
-  za <- file.path(STORE, k, sprintf("App%s_%s.zip", n, caps$app[i]))
-  zip::zipr(za, files = file.path("apps", caps$app[i]))
-  guardar(sprintf("app:%s", n), za, k)
+  # Scripts de R, UNO A UNO (decisión del autor, 10/10/2026): cada script tiene su clave (script-Tnn-ECON,
+  # script-Tnn-CPA…), que el profesor suelta en clase y vuelve a retirar, y su propio zip listo para abrir en RStudio:
+  # el proyecto, el script y SOLO los datos que lee (los busca como data/<fichero>). El zip se crea ya en la carpeta
+  # de su clave: en la del tema se descargaría al liberar el tema.
+  for (f in sort(list.files("scripts", pattern = sprintf("^T%s_.*\\.R$", n), full.names = TRUE))) {
+    base <- tools::file_path_sans_ext(basename(f))
+    parte <- strsplit(base, "_", fixed = TRUE)[[1]][2]
+    ks <- sprintf("script-T%s-%s", n, parte)
+    txt <- paste(readLines(f, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+    datos <- unique(regmatches(txt, gregexpr("[A-Za-z0-9_.-]+\\.(csv|xlsx)", txt))[[1]])
+    datos <- datos[file.exists(file.path("data", datos))]
+    dir_z <- file.path(tempfile("script_"), sprintf("Econometria_%s", base))
+    dir.create(file.path(dir_z, "scripts"), recursive = TRUE)
+    file.copy("mEconometria.Rproj", dir_z); file.copy(f, file.path(dir_z, "scripts"))
+    if (length(datos)) { dir.create(file.path(dir_z, "data")); file.copy(file.path("data", datos), file.path(dir_z, "data")) }
+    z <- file.path(STORE, ks, sprintf("%s.zip", base)); dir.create(dirname(z), recursive = TRUE, showWarnings = FALSE)
+    zip::zipr(z, files = dir_z)
+    guardar(sprintf("script:%s:%s", n, parte), z, ks)
+    resto <- sub("^Script_", "", sub(sprintf("^T%s_%s_", n, parte), "", base))
+    SCRIPTS <- rbind(SCRIPTS, data.frame(nn = n, parte = parte, clave = ks, n_datos = length(datos),
+      es = sprintf("%s · %s", if (parte == "ECON") "Script del tema" else paste("Caso", sub("^CP", "", parte)), gsub("_", " ", resto)),
+      en = sprintf("%s · %s", if (parte == "ECON") "Chapter script" else paste("Case", sub("^CP", "", parte)), gsub("_", " ", resto))))
+  }
+  # Las apps ya no se publican como zip: se ejecutan en la VM de apps de la asignatura (web/apps.conf,
+  # _tools/publicar_apps.sh) y la web solo enseña el botón que las abre (boton_app, decisión del autor, 10/10/2026)
 }
 prof("clase_prof:05", "materiales/clase/profesor/T05_Practica_Intervalos_SOLUCION.xlsx", "profesor/downloads/clase/T05_Practica_Intervalos_SOLUCION.xlsx")
 for (f in c("T00_Presentacion_asignatura.pptx", "S1_Simulacro.pptx")) prof(paste0("pptx:", f), file.path("materiales/presentaciones/pptx", f), file.path("profesor/downloads/slides", f))
@@ -211,6 +224,14 @@ slides_html <- function(n, zona, L) {
   paste(vapply(seq_along(b), function(j) par2(b[j], if (length(b) > 1) sprintf(tx(L, "Slides · chapter %d (%d/%d)", "Presentación · tema %d (%d/%d)"), nt, j, length(b))
                                                      else sprintf(tx(L, "Slides · chapter %d", "Presentación · tema %d"), nt), zona, L), ""), collapse = "")
 }
+# Scripts del tema, uno a uno: cada uno con su clave. Los alumnos ven solo los liberados; en el plan del profesor salen
+# en verde o rojo con su botón «Liberar / Ocultar» (liberable_en_clase, motor). Van en la sesión de la app del tema.
+scripts_html <- function(n, zona, L) {
+  s <- SCRIPTS[SCRIPTS$nn == n, ]
+  paste(vapply(seq_len(nrow(s)), function(j) liberable_en_clase(s$clave[j],
+    chip(sprintf("script:%s:%s", n, s$parte[j]), if (L == "es") s$es[j] else s$en[j], zona, paste0(if (L == "en") "R script in Spanish · " else "Script de R · ", if (s$n_datos[j]) tx(L, "with its data · ", "con sus datos · ") else "")),
+    sprintf("Tema %d · %s", as.integer(n), s$es[j]), zona), ""), collapse = "")
+}
 clase_html <- function(n, zona, L) paste(vapply(CLASE[[n]], function(k) chip(k, nombre_fich(sub("^clase:[0-9]+:", "", k)), zona,if (L == "en") "Spanish · " else ""), ""), collapse = "")
 material_html <- function(code, zona = "public", temas = character(), L = "en") {
   p <- strsplit(code, ":", fixed = TRUE)[[1]]
@@ -231,8 +252,9 @@ material_html <- function(code, zona = "public", temas = character(), L = "en") 
     book   = par2(sprintf("book:%s", v), sprintf(tx(L, "Book · chapter %d", "Manual · tema %d"), nt), zona, L),
     slides = slides_html(v, zona, L),
     clase  = clase_html(v, zona, L),
-    script = chip(sprintf("script:%s", v), sprintf(tx(L, "R scripts · chapter %d", "Scripts de R · tema %d"), nt), zona, if (L == "en") "Spanish · " else ""),
-    app    = chip(sprintf("app:%s", v), sprintf(tx(L, "App · chapter %d", "App · tema %d"), nt), zona, "Shiny · "),
+    script = scripts_html(v, zona, L),
+    app    = paste0(boton_app(tkey(v), sprintf(tx(L, "App · chapter %d", "App · tema %d"), nt), zona, tx(L, "Interactive · opens in a new window", "Interactiva · se abre en otra ventana")),
+                    scripts_html(v, zona, L)),
     stop("Código de material desconocido: ", code))
   if (!nzchar(x)) return("")
   liberable(tkey(v), x, "", zona, en_linea = TRUE)
@@ -311,7 +333,8 @@ for (L in IDIOMAS) {
     n <- caps$nn[i]
     descargas <- sprintf('<div class="dls">%s%s%s%s%s</div>',
       par2(sprintf("book:%s", n), tx(L, "Book chapter", "Capítulo del manual"), L = L), slides_html(n, "public", L), clase_html(n, "public", L),
-      chip(sprintf("script:%s", n), tx(L, "R scripts", "Scripts de R"), meta = if (L == "en") "Spanish · " else ""), chip(sprintf("app:%s", n), "App", meta = "Shiny · "))
+      scripts_html(n, "public", L),
+      boton_app(tkey(n), "App", meta = tx(L, "Interactive · new window", "Interactiva · otra ventana")))
     sprintf('<tr><td class="wk">%d</td><td><b>%s</b><small lang="%s">%s</small></td><td>%s</td></tr>',
             i, h(tx(L, caps$titulo_en[i], caps$titulo_es[i])), setdiff(IDIOMAS, L), h(tx(L, caps$titulo_es[i], caps$titulo_en[i])),
             liberable(tkey(n), descargas, tx(L, "Available once this chapter is published.", "Disponible cuando se publique este tema.")))
@@ -322,11 +345,11 @@ for (L in IDIOMAS) {
     '<div class="dls">', material_html("form", L = L), '</div>',
     '<div class="tbl"><table class="mat"><thead><tr><th>#</th><th>', tx(L, "Chapter", "Tema"), '</th><th>', tx(L, "Downloads", "Descargas"), '</th></tr></thead><tbody>', paste(filas_mat, collapse = ""), '</tbody></table></div>',
     tx(L, paste0('<section class="grid3"><article><h2>Excel by hand</h2><p>The class workbooks repeat the calculations with the matrix formulas (MMULT, MINVERSE, TRANSPOSE): the same work you will do in the hand-calculation part of the exam.</p></article>',
-                 '<article><h2>R scripts</h2><p>Each zip is an RStudio project with the data and the scripts of the chapter: open the <code>.Rproj</code> file and run the scripts block by block.</p></article>',
-                 '<article><h2>Apps</h2><p>The apps are Shiny applications: unzip and run <code>shiny::runApp()</code> in RStudio. They generate the data they use.</p></article></section>'),
+                 '<article><h2>R scripts</h2><p>The scripts of each chapter (an RStudio project with its data) are shared in class when we work with them.</p></article>',
+                 '<article><h2>Apps</h2><p>Each chapter has an interactive app that opens in a new window of your browser: nothing to install.</p></article></section>'),
           paste0('<section class="grid3"><article><h2>Excel a mano</h2><p>Los Excel de clase repiten los cálculos con las fórmulas matriciales (MMULT, MINVERSA, TRANSPONER): el mismo trabajo de la parte manual del examen.</p></article>',
-                 '<article><h2>Scripts de R</h2><p>Cada zip es un proyecto de RStudio con los datos y los scripts del tema: abre el fichero <code>.Rproj</code> y ejecuta los scripts bloque a bloque.</p></article>',
-                 '<article><h2>Apps</h2><p>Las apps son aplicaciones Shiny: descomprime y ejecuta <code>shiny::runApp()</code> en RStudio. Generan los datos que usan.</p></article></section>'))),
+                 '<article><h2>Scripts de R</h2><p>Los scripts de cada tema (un proyecto de RStudio con sus datos) se comparten en clase cuando trabajamos con ellos.</p></article>',
+                 '<article><h2>Apps</h2><p>Cada tema tiene una app interactiva que se abre en otra ventana del navegador: no hay que instalar nada.</p></article></section>'))),
     actual = "Materials")
 
   # Actividades
@@ -421,7 +444,10 @@ pagina_plan_docente(semanas,
 # Liberar contenidos
 semanas_de_tema <- function(nn) paste(vapply(Filter(function(s) nn %in% temas_de(s), semanas), function(s) as.character(s$n), ""), collapse = ", ")
 filas_temas <- vapply(seq_len(nrow(caps)), function(i) fila_lib(tkey(caps$nn[i]), sprintf("Tema %d · %s", i, caps$titulo_es[i]),
-  sprintf("Semanas %s · capítulo del manual, presentaciones, Excel de clase, scripts y app", semanas_de_tema(caps$nn[i]))), "")
+  sprintf("Semanas %s · capítulo del manual, presentaciones, Excel de clase y app (los scripts van aparte, abajo)", semanas_de_tema(caps$nn[i]))), "")
+filas_scripts <- vapply(seq_len(nrow(SCRIPTS)), function(j) fila_lib(SCRIPTS$clave[j], sprintf("Tema %d · %s", as.integer(SCRIPTS$nn[j]), SCRIPTS$es[j]),
+  sprintf("Solo mientras esté liberado: suéltalo en clase y retíralo al terminar · zip con el proyecto de RStudio y el script%s",
+          if (SCRIPTS$n_datos[j]) sprintf(" y sus datos (%d)", SCRIPTS$n_datos[j]) else "")), "")
 filas_acts <- vapply(seq_len(nrow(acts)), function(i) fila_lib(acts$id[i], sprintf("Actividad %s · %s", sub("A", "", acts$id[i]), acts$titulo[i]),
   sprintf("%s · entrega: %s · %s", acts$ventana_es[i], acts$entrega_es[i], if (hay_act(acts$id[i])) "enunciado, datos, hoja de respuestas y rúbrica" else "pendiente de escribir")), "")
 filas_sols <- vapply(seq_len(nrow(acts)), function(i) fila_lib(paste0("solutions-", acts$id[i]), sprintf("Solución de la actividad %s", sub("A", "", acts$id[i])),
@@ -430,7 +456,7 @@ cuando_eval <- function(e) { n <- semana_eval(e); if (e == "F1") tr_plan(EXAMEN_
 filas_ev <- vapply(EVAL$id[EVAL$hay], function(e) fila_lib(e, EVAL$titulo[EVAL$id == e], sprintf("%s · publicar al empezar la clase", cuando_eval(e))), "")
 filas_ev_sol <- vapply(EVAL$id[EVAL$hay], function(e) fila_lib(paste0("solutions-", e), sprintf("Solucionario · %s", EVAL$titulo[EVAL$id == e]),
   sprintf("%s · publicar al terminar la clase", cuando_eval(e))), "")
-pagina_liberar(c(tabla_lib("Temas", filas_temas), tabla_lib("Actividades", filas_acts), tabla_lib("Soluciones de las actividades", filas_sols),
+pagina_liberar(c(tabla_lib("Temas", filas_temas), tabla_lib("Scripts de R (los repartes tú en clase)", filas_scripts), tabla_lib("Actividades", filas_acts), tabla_lib("Soluciones de las actividades", filas_sols),
                  if (length(filas_ev)) c(tabla_lib("Supuesto orientativo y simulacro", filas_ev), tabla_lib("Solucionarios", filas_ev_sol))))
 
 # Acceso de alumnos (usuarios, enlaces de clase y modo de la web) y Grupos y avance: páginas comunes del motor

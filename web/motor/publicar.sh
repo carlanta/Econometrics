@@ -43,7 +43,18 @@ else
   echo "AVISO: el servidor tiene el motor \$ACTUAL, más nuevo que el de esta asignatura (\$NUEVA)."
   echo "       No se toca el servicio común. Actualiza el motor de la asignatura (webMotor/actualizar.sh) y vuelve a publicar."
 fi
-sed -e "s/@WEB@/\$W/g" -e "s/@NOMBRE@/\$NOMBRE/g" \$N/motor/servidor/nginx.conf.plantilla > /etc/nginx/sites-available/\$W.conf
+# Apps de la asignatura (opcional): APPS=<ip>:<puerto> de su VM en web/curso.conf. Sin APPS, el bloque se quita.
+APPS='${APPS:-}'
+install -d -m 755 /etc/nginx/snippets
+[ -f \$N/motor/servidor/webs-apps-proxy.conf ] && install -m 644 \$N/motor/servidor/webs-apps-proxy.conf /etc/nginx/snippets/webs-apps-proxy.conf
+[ -f \$N/motor/servidor/webs-apps-http.conf ] && install -m 644 \$N/motor/servidor/webs-apps-http.conf /etc/nginx/conf.d/webs-apps-http.conf
+if [ -n "\$APPS" ]; then
+  [[ "\$APPS" =~ ^[0-9.]+:[0-9]+\$ ]] || { echo "APPS mal escrito en web/curso.conf (ip:puerto): \$APPS"; exit 1; }
+  sed -e "s/@WEB@/\$W/g" -e "s/@NOMBRE@/\$NOMBRE/g" -e "s/@APPS@/\$APPS/g" \$N/motor/servidor/nginx.conf.plantilla > /etc/nginx/sites-available/\$W.conf
+  echo "apps de la asignatura: \$APPS"
+else
+  sed -e "s/@WEB@/\$W/g" -e "s/@NOMBRE@/\$NOMBRE/g" -e '/# APPS-INICIO/,/# APPS-FIN/d' \$N/motor/servidor/nginx.conf.plantilla > /etc/nginx/sites-available/\$W.conf
+fi
 ln -sf /etc/nginx/sites-available/\$W.conf /etc/nginx/sites-enabled/\$W.conf
 id -nG www-data | grep -qw webs || usermod -aG webs www-data
 install -d -o webs -g webs -m 2775 \$B/estado

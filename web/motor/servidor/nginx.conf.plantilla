@@ -95,6 +95,29 @@ server {
         autoindex off;
     }
 
+    # APPS-INICIO · Apps de la asignatura, servidas por su propia VM (una por asignatura, en HP04; @APPS@).
+    # publicar.sh borra este bloque si web/curso.conf no tiene APPS. El código de las apps no sale nunca de esa VM:
+    # al navegador solo le llega la pantalla. Cada app se llama como la clave de liberación de su contenido (T01…):
+    # los alumnos la abren en /apps/<clave>/ solo si esa clave está liberada (existe public/downloads/<clave>, que crea
+    # y borra liberar.py), con su clave común como todo lo demás; el profesor, siempre, en /profesor/apps/<clave>/.
+    location ~ ^/apps/(?<clave_app>[A-Za-z0-9_-]+)/ {
+        # Clave sin liberar: la petición sigue su camino (y pide la clave de los alumnos) pero llega a la VM como
+        # /no-liberada/, que allí no existe: 404 DESPUÉS de la clave. Con un «return 404» aquí, el 404 salía antes que
+        # el 401 y desde fuera se podía saber qué temas estaban liberados (corregido el 10/10/2026).
+        if (!-e /srv/webs/@WEB@/public/downloads/$clave_app) { rewrite ^ /no-liberada/ break; }
+        rewrite ^/apps/(.*)$ /$1 break;
+        proxy_pass http://@APPS@;
+        include /etc/nginx/snippets/webs-apps-proxy.conf;
+    }
+    location ~ ^/profesor/apps/[A-Za-z0-9_-]+/ {
+        auth_basic "@NOMBRE@ - profesor";
+        auth_basic_user_file /etc/nginx/htpasswd/@WEB@;
+        rewrite ^/profesor/apps/(.*)$ /$1 break;
+        proxy_pass http://@APPS@;
+        include /etc/nginx/snippets/webs-apps-proxy.conf;
+    }
+    # APPS-FIN
+
     location / {
         try_files $uri $uri/ =404;
     }

@@ -169,21 +169,43 @@
     var n = 0;
     Array.prototype.forEach.call(document.querySelectorAll("a.dl[data-estado]"), function (a) {
       var on = !!libres[a.dataset.estado];
-      a.classList.add(on ? "est-si" : "est-no");
+      a.classList.toggle("est-si", on);
+      a.classList.toggle("est-no", !on);
       a.title = on ? "Liberado: los alumnos ya lo ven" : "Sin liberar: solo lo ves tú";
       var m = a.querySelector(".dl-m");
       if (m && !m.querySelector(".est-pt")) {
         var p = document.createElement("span");
         p.className = "est-pt";
-        p.textContent = on ? "● " : "● ";
+        p.textContent = "● ";
         m.insertBefore(p, m.firstChild);
       }
       n++;
     });
+    /* Botones para liberar u ocultar sin salir del plan (scripts de R que se sueltan en clase):
+       <button data-liberar="CLAVE" data-nombre="…">. Mismo servicio y misma petición que /profesor/liberar.html. */
+    Array.prototype.forEach.call(document.querySelectorAll("button[data-liberar]"), function (b) {
+      var on = !!libres[b.dataset.liberar];
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.textContent = on ? "Ocultar" : "Liberar";
+      b.title = on ? "Los alumnos lo ven: pulsa para retirarlo" : "Solo lo ves tú: pulsa para que lo vean los alumnos";
+      b.disabled = false;
+      b.hidden = false;
+    });
     return n;
   }
 
-  var hayEstado = document.querySelector("a.dl[data-estado]");
+  document.addEventListener("click", function (ev) {
+    var b = ev.target.closest("button[data-liberar]");
+    if (!b) return;
+    var on = b.getAttribute("aria-pressed") !== "true";
+    if (!confirm((on ? "¿Liberar para los alumnos?\n\n" : "¿Ocultar a los alumnos?\n\n") + (b.dataset.nombre || b.dataset.liberar))) return;
+    b.disabled = true;
+    post("liberar", { key: b.dataset.liberar, released: on })
+      .then(get).then(estados)
+      .catch(function (e) { alert("No se pudo guardar el cambio: " + e.message); b.disabled = false; });
+  });
+
+  var hayEstado = document.querySelector("a.dl[data-estado], button[data-liberar]");
   if (!document.getElementById("grupos-sel") && !document.getElementById("panel-grupos") && !hayEstado) return;
   get().then(function (d) {
     if (document.getElementById("grupos-sel")) semana(d);
