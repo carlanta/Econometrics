@@ -39,7 +39,7 @@ for (L in c("es", "en")) {
     c(est = est, se = se, li = est - tc_a * se, ls = est + tc_a * se)
   }
   cl1 <- comb(c(0, 1, 0.5, 0))   # β1 + 0,5·β2
-  cl2 <- comb(c(0, -1, 1, 0))    # β2 − β1
+  cl2 <- comb(c(0, 1, 1, 0))     # β1 + β2: como β1 < 0, compara las magnitudes (β2 − β1 sale positiva siempre)
 
   x <- nueva_presentacion()
 
@@ -215,12 +215,12 @@ for (L in c("es", "en")) {
                            ". El 0 está dentro: los dos efectos se compensan."),
                     paste0("Raise the price by €1 and advertising by €0.5m: estimate ", num(cl1["est"], 4), ", standard error ", num(cl1["se"], 4),
                            ". 0 is inside: the two effects offset each other.")), ID$navy, size_valor = 26)
-  x <- caja_dato(x, 6.8, 3.45, 5.9, 2.7, M("\\beta_2 - \\beta_1"),
+  x <- caja_dato(x, 6.8, 3.45, 5.9, 2.7, M("\\beta_1 + \\beta_2"),
                  M(paste0("[", numtex(cl2["li"], 2), ",\\ ", numtex(cl2["ls"], 2), "]")),
-                 tr(paste0(M("\\mathbf{c}' = (0,\\,-1,\\,1,\\,0)"), ": estimación ", num(cl2["est"], 4), ", error estándar ", num(cl2["se"], 4),
-                           ". Todo positivo: la publicidad pesa más que el precio."),
-                    paste0(M("\\mathbf{c}' = (0,\\,-1,\\,1,\\,0)"), ": estimate ", num(cl2["est"], 4), ", standard error ", num(cl2["se"], 4),
-                           ". All positive: advertising weighs more than price.")), ID$oro, size_valor = 26)
+                 tr(paste0(M("\\mathbf{c}' = (0,\\,1,\\,1,\\,0)"), ": estimación ", num(cl2["est"], 4), ", error estándar ", num(cl2["se"], 4),
+                           ". Como el precio resta, todo positivo: la publicidad pesa más, en valor absoluto, que el precio."),
+                    paste0(M("\\mathbf{c}' = (0,\\,1,\\,1,\\,0)"), ": estimate ", num(cl2["est"], 4), ", standard error ", num(cl2["se"], 4),
+                           ". Price enters with a minus sign, so all positive: advertising weighs more than price in absolute value.")), ID$oro, size_valor = 26)
 
   # 13 · Bloque 3
   x <- diapo_bloque(x, 3, tr("Ver los intervalos y aplicarlos", "Seeing and applying intervals"),
