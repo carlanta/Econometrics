@@ -32,6 +32,7 @@ CURSO <- list(
   etiqueta_sesion = function(x, L) if (x$tipo == "larga") tx(L, "Live class · 90 min", "Clase en directo · 90 min") else tx(L, "Live class · 60 min", "Clase en directo · 60 min"),
   etiqueta_corta = function(x, L) if (x$tipo == "larga") "90 min" else "60 min")
 source("web/motor/R/motor.R")
+source("web/videos.R")   # vídeos del curso (ES/EN) y podcasts de repaso, con su clave de liberación
 NCAP <- 10
 
 # El plan lleva cada texto en inglés y en español (TT) y rellena el diccionario ES_PLAN del motor
@@ -456,8 +457,28 @@ cuando_eval <- function(e) { n <- semana_eval(e); if (e == "F1") tr_plan(EXAMEN_
 filas_ev <- vapply(EVAL$id[EVAL$hay], function(e) fila_lib(e, EVAL$titulo[EVAL$id == e], sprintf("%s · publicar al empezar la clase", cuando_eval(e))), "")
 filas_ev_sol <- vapply(EVAL$id[EVAL$hay], function(e) fila_lib(paste0("solutions-", e), sprintf("Solucionario · %s", EVAL$titulo[EVAL$id == e]),
   sprintf("%s · publicar al terminar la clase", cuando_eval(e))), "")
+# Vídeos del curso: una clave por sesión (video-sNNX), solo para las sesiones con algún vídeo ya subido. Los
+# ficheros viven en videos/<clave>/ del servidor de webs, fuera del publicador (web/videos.R).
+filas_videos <- unlist(lapply(sesiones_con_video(semanas), function(sv) {
+  sid <- sid_sesion(sv$s, sv$x); ps <- PROPIOS[[sid]]
+  if (is.null(ps) || !any(ps$listo)) return(character())
+  k <- clave_video(sv$s, sv$x); dir.create(file.path(STORE, k), showWarnings = FALSE)
+  fila_lib(k, sprintf("Vídeos del curso · semana %d, %s", sv$s$n, etiqueta_corta(sv$x, "es")),
+    sprintf("%s  —  %s%s", tr_plan(sv$x$titulo, "es"), paste(sprintf("%s [%s]", ps$titulo_es[ps$listo], ps$min_es[ps$listo]), collapse = " · "),
+            if (any(!ps$listo)) sprintf("  —  en preparación: %s", paste(ps$titulo_es[!ps$listo], collapse = " · ")) else ""))
+}))
+# Podcasts de repaso: clave propia (podcast-TNN), una fila por clave que suelta a la vez las dos versiones
+pc <- podcasts()
+filas_podcasts <- vapply(unique(pc$clave), function(k) {
+  v <- pc[pc$clave == k, ]; dir.create(file.path(STORE, k), showWarnings = FALSE)
+  fila_lib(k, sprintf("Podcast de repaso · tema %d · semana %d", as.integer(sub("podcast-T", "", k)), as.integer(substr(v$sid[1], 2, 3))),
+    sprintf("%s  —  un solo botón suelta las dos versiones · los mp3 van en videos/%s/ del servidor de webs",
+            paste(sprintf("%s [%s]", v$titulo_es, v$minutos), collapse = " · "), k))
+}, "")
 pagina_liberar(c(tabla_lib("Temas", filas_temas), tabla_lib("Scripts de R (los repartes tú en clase)", filas_scripts), tabla_lib("Actividades", filas_acts), tabla_lib("Soluciones de las actividades", filas_sols),
-                 if (length(filas_ev)) c(tabla_lib("Supuesto orientativo y simulacro", filas_ev), tabla_lib("Solucionarios", filas_ev_sol))))
+                 if (length(filas_ev)) c(tabla_lib("Supuesto orientativo y simulacro", filas_ev), tabla_lib("Solucionarios", filas_ev_sol)),
+                 if (length(filas_videos)) tabla_lib("Vídeos de clase", filas_videos),
+                 if (length(filas_podcasts)) tabla_lib("Podcasts de repaso", filas_podcasts)))
 
 # Acceso de alumnos (usuarios, enlaces de clase y modo de la web) y Grupos y avance: páginas comunes del motor
 pagina_acceso()
