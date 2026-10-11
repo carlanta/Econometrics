@@ -33,31 +33,30 @@ PROPIOS <- list(
   "s02C" = bind_rows(
     v("T02_01_mrlg", "The general linear regression model", "El modelo de regresión lineal general", 5, 4, "Una ecuación para n observaciones, y seis supuestos."),
     v("T02_02_mco_matrices_1", "OLS by hand (I): from the data to X'X and X'Y", "MCO a mano (I): de los datos a X'X y X'Y", 4, 3, "La fórmula del examen, paso a paso con DS_mini."),
-    v("T02_03_mco_matrices_2", "OLS by hand (II): the inverse and the coefficients", "MCO a mano (II): la inversa y los coeficientes", 4, 3, "Pasos 3 y 4 con DS_mini, y la comprobación.", listo = FALSE)),
+    v("T02_03_mco_matrices_2", "OLS by hand (II): the inverse and the coefficients", "MCO a mano (II): la inversa y los coeficientes", 4, 3, "Pasos 3 y 4 con DS_mini, y la comprobación.")),
 
   "s03C" = bind_rows(
-    v("T02_04_interpretacion", "Interpreting the coefficients", "Interpretar los coeficientes", 4, 3, "Número, unidades y ceteris paribus; y los logaritmos.", listo = FALSE),
-    v("T02_05_bondad_ajuste", "Goodness of fit: R² and the standard error", "Bondad de ajuste: el R² y el error típico", 3, 3, "Cuánta variación de Y explica el modelo.", listo = FALSE),
-    v("T02_06_casos", "Back to the cases", "Vuelta a los casos", 3, 2, "Los tres casos del curso, estimados por MCO.", listo = FALSE)),
+    v("T02_04_interpretacion", "Interpreting the coefficients", "Interpretar los coeficientes", 4, 3, "Número, unidades y ceteris paribus; y los logaritmos."),
+    v("T02_05_bondad_ajuste", "Goodness of fit: R² and the standard error", "Bondad de ajuste: el R² y el error típico", 3, 3, "Cuánta variación de Y explica el modelo."),
+    v("T02_06_casos", "Back to the cases", "Vuelta a los casos", 3, 2, "Los tres casos del curso, estimados por MCO.")),
 
   # Tema 3 (semana 4)
   "s04C" = bind_rows(
-    v("T03_01_r2_ajustado", "The adjusted R²", "El R² ajustado", 4, 3, "¿Más variables es siempre mejor?", listo = FALSE),
-    v("T03_02_gauss_markov", "Gauss-Markov: OLS is BLUE", "Gauss-Markov: MCO es ELIO", 3, 3, "¿Por qué fiarnos de MCO y no de cualquier otra recta?", listo = FALSE),
-    v("T03_03_errores_estandar", "Error variance and standard errors", "Varianza del error y errores estándar", 4, 3, "La precisión de cada coeficiente, con DS_mini.", listo = FALSE),
-    v("T03_04_casos", "Back to the cases", "Vuelta a los casos", 4, 3, "Modelos progresivos en los tres casos.", listo = FALSE)),
+    v("T03_01_r2_ajustado", "The adjusted R²", "El R² ajustado", 4, 3, "¿Más variables es siempre mejor?"),
+    v("T03_02_gauss_markov", "Gauss-Markov: OLS is BLUE", "Gauss-Markov: MCO es ELIO", 3, 3, "¿Por qué fiarnos de MCO y no de cualquier otra recta?"),
+    v("T03_03_errores_estandar", "Error variance and standard errors", "Varianza del error y errores estándar", 4, 3, "La precisión de cada coeficiente, con DS_mini."),
+    v("T03_04_casos", "Back to the cases", "Vuelta a los casos", 4, 3, "Modelos progresivos en los tres casos.")),
 
   # Tema 4: el contraste t en la semana 5; restricciones, F y significación global en la 6
   "s05C" = bind_rows(
-    v("T04_01_logica", "The logic of a test", "La lógica del contraste", 3, 2, "¿Es real el efecto, o fruto del azar?", listo = FALSE),
-    v("T04_02_contraste_t", "The t test and the p-value", "El contraste t y el p-valor", 4, 3, "Una y dos colas, y el precio paso a paso.", listo = FALSE)),
+    v("T04_01_logica", "The logic of a test", "La lógica del contraste", 3, 2, "¿Es real el efecto, o fruto del azar?"),
+    v("T04_02_contraste_t", "The t test and the p-value", "El contraste t y el p-valor", 4, 3, "Una y dos colas, y el precio paso a paso.")),
 
-  # T04_05 (EN) y T04_06: duración estimada hasta que estén montados
   "s06L" = bind_rows(
-    v("T04_03_restriccion_lineal", "One linear restriction", "Una restricción lineal", 3, 3, "Contrastar una combinación de coeficientes con el t.", listo = FALSE),
-    v("T04_04_contraste_F", "Several restrictions: the F test", "Varias restricciones: el contraste F", 3, 3, "Comparar el modelo restringido con el completo.", listo = FALSE),
-    v("T04_05_significatividad_global", "Overall significance", "Significatividad global", 3, 2, "¿Explica algo el modelo en su conjunto?", listo = FALSE),
-    v("T04_06_casos", "Back to the cases", "Vuelta a los casos", 3, 3, "Qué variables cuentan en cada caso.", listo = FALSE)),
+    v("T04_03_restriccion_lineal", "One linear restriction", "Una restricción lineal", 3, 3, "Contrastar una combinación de coeficientes con el t."),
+    v("T04_04_contraste_F", "Several restrictions: the F test", "Varias restricciones: el contraste F", 3, 3, "Comparar el modelo restringido con el completo."),
+    v("T04_05_significatividad_global", "Overall significance", "Significatividad global", 3, 2, "¿Explica algo el modelo en su conjunto?"),
+    v("T04_06_casos", "Back to the cases", "Vuelta a los casos", 4, 3, "Qué variables cuentan en cada caso.")),
 
   # Tema 5: la teoría en la semana 7; los casos con Gretl en la 8
   "s07L" = bind_rows(
@@ -96,16 +95,16 @@ PROPIOS <- list(
   # Tema 9 (semana 13)
   "s13C" = bind_rows(
     v("T09_01_homocedasticidad", "Homoskedasticity and graphical detection", "Homocedasticidad y detección gráfica", 4, 3, "Qué falla cuando la varianza cambia, y cómo se ve."),
-    v("T09_02_breusch_pagan", "The Breusch-Pagan test", "El contraste de Breusch-Pagan", 3, 3, "¿Explican las X la varianza del error?", listo = FALSE),
-    v("T09_03_robusta", "Robust OLS estimation", "Estimación MCO robusta", 3, 2, "Mismos coeficientes, otra matriz de varianzas.", listo = FALSE),
+    v("T09_02_breusch_pagan", "The Breusch-Pagan test", "El contraste de Breusch-Pagan", 3, 3, "¿Explican las X la varianza del error?"),
+    v("T09_03_robusta", "Robust OLS estimation", "Estimación MCO robusta", 3, 2, "Mismos coeficientes, otra matriz de varianzas."),
     v("T09_04_casos", "Back to the cases", "Vuelta a los casos", 3, 2, "Un diagnóstico para cada caso.")),
 
   # Tema 10 (semana 14, clase larga)
   "s14L" = bind_rows(
-    v("T10_01_concepto", "The concept of autocorrelation", "El concepto de autocorrelación", 3, 2, "Errores que recuerdan al anterior.", listo = FALSE),
-    v("T10_02_durbin_watson", "Consequences and the Durbin-Watson test", "Consecuencias y contraste de Durbin-Watson", 3, 2, "Un número entre 0 y 4 que se lee junto al 2.", listo = FALSE),
-    v("T10_03_dw_caso_c", "Durbin-Watson in case C", "Durbin-Watson en el caso C", 3, 2, "Rachas de residuos del mismo signo.", listo = FALSE),
-    v("T10_04_hac", "Robust inference: HAC errors", "Inferencia robusta: errores HAC", 4, 3, "Newey-West: robustos a las dos cosas.", listo = FALSE),
+    v("T10_01_concepto", "The concept of autocorrelation", "El concepto de autocorrelación", 3, 2, "Errores que recuerdan al anterior."),
+    v("T10_02_durbin_watson", "Consequences and the Durbin-Watson test", "Consecuencias y contraste de Durbin-Watson", 3, 2, "Un número entre 0 y 4 que se lee junto al 2."),
+    v("T10_03_dw_caso_c", "Durbin-Watson in case C", "Durbin-Watson en el caso C", 3, 2, "Rachas de residuos del mismo signo."),
+    v("T10_04_hac", "Robust inference: HAC errors", "Inferencia robusta: errores HAC", 4, 3, "Newey-West: robustos a las dos cosas."),
     v("T10_05_casos", "Back to the cases", "Vuelta a los casos", 3, 2, "Solo el caso C tiene memoria."))
 )
 
